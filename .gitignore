@@ -1,0 +1,16 @@
+.direnv/
+*.sqlite3
+.env
+
+__pycache__/
+*.pyc
+*.pyo
+*.log
+node_modules/
+dist/
+build/
+*.DS_Store
+.idea/
+.vscode/
+*.bak
+*.swp
