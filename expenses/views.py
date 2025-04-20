@@ -16,12 +16,12 @@ class ExpenseCreateView(generics.CreateAPIView):
         group = ExpenseGroup.objects.get(id=group_id)
         
         # Check if the user is part of the group
+        print("Geree!!!!!")
         if self.request.user not in group.members.all():
-            return Response(
-                {"detail": "You are not a member of this group."},
-                status=status.HTTP_403_FORBIDDEN
+            print("Geree2!!!!!", self.request.user)
+            raise PermissionDenied("You are not a member of this group."
             )
-        
+        print(self.request.data)
         # Save the expense if the user is a part of the group
         serializer.save(paid_by=self.request.user)
 

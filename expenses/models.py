@@ -22,3 +22,14 @@ class Expense(models.Model):
         if num_users > 0:
             return self.amount / num_users
         return 0
+
+class Split(models.Model):
+    expense = models.ForeignKey('Expense', on_delete=models.CASCADE, related_name='splits')
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'{self.user.username} owes {self.amount} for {self.expense.title}'
+
+# Paid by multiple users
