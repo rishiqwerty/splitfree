@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import json
 from pathlib import Path
 import os
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -91,7 +92,7 @@ DATABASES = {
         'PASSWORD': os.getenv('DB_PASSWORD', ''),
         'HOST': os.getenv('DB_HOST', ''),
         'PORT': os.getenv('DB_PORT', ''),
-        'OPTIONS': os.getenv('DB_OPTIONS', {}),
+        'OPTIONS': json.loads(os.getenv('DB_OPTIONS', '{}')),
     }
 }
 
