@@ -1,3 +1,5 @@
+import base64
+import json
 from firebase_admin import auth as firebase_auth, credentials, initialize_app
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -6,7 +8,16 @@ from django.contrib.auth import get_user_model
 from rest_framework.authtoken.models import Token
 import os
 
-cred = credentials.Certificate(os.getenv('FIREBASE_CREDENTIALS'))
+firebase_cred = os.getenv('FIREBASE_CREDENTIALS')
+firebase_b64 = os.getenv("FIREBASE_CREDENTIALS_B64")
+
+if firebase_b64:
+    decoded = base64.b64decode(firebase_b64)
+    FIREBASE_CREDENTIALS = json.loads(decoded)
+else:
+    FIREBASE_CREDENTIALS = firebase_cred
+
+cred = credentials.Certificate(FIREBASE_CREDENTIALS)
 initialize_app(cred)
 
 User = get_user_model()
