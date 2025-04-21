@@ -1,0 +1,9 @@
+
+export SECRET_KEY=""
+export DB_HOST=""
+export DB_PORT=""
+export DB_NAME=""
+export DB_USER=""
+export DB_PASSWORD=""
+
+export FIREBASE_CREDENTIALS=splitfree-d5b4d-firebase-adminsdk-fbsvc-4e63c0cb90.json

@@ -1,6 +1,4 @@
 from rest_framework import generics
-from rest_framework.response import Response
-from rest_framework import status
 from django.core.exceptions import PermissionDenied
 
 from .models import Expense
@@ -18,13 +16,11 @@ class ExpenseCreateView(generics.CreateAPIView):
         # Check if the user is part of the group
         print("Geree!!!!!")
         if self.request.user not in group.members.all():
-            print("Geree2!!!!!", self.request.user)
             raise PermissionDenied("You are not a member of this group."
             )
         print(self.request.data)
         # Save the expense if the user is a part of the group
         serializer.save(paid_by=self.request.user)
-
 
 class ExpenseListView(generics.ListAPIView):
     serializer_class = ExpenseSerializer
