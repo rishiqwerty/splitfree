@@ -83,12 +83,6 @@ WSGI_APPLICATION = 'splitfree_backend.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-
-try:
-    db_options = json.loads(os.getenv('DB_OPTIONS', '{}'))  # Parse DB_OPTIONS as JSON
-except json.JSONDecodeError as e:
-    print(f"Error parsing DB_OPTIONS: {e}")  # Log the error for debugging
-    db_options = {} 
     
 DATABASES = {
     'default': {
