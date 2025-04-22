@@ -83,17 +83,9 @@ WSGI_APPLICATION = 'splitfree_backend.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-    
+import dj_database_url
 DATABASES = {
-    'default': {
-        'ENGINE': os.getenv('DB_ENGINE', 'django.db.backends.sqlite3'),  # Default to SQLite
-        'NAME': os.getenv('DB_NAME', BASE_DIR / 'db.sqlite3' if os.getenv('DB_ENGINE') == 'django.db.backends.sqlite3' else ''),
-        'USER': os.getenv('DB_USER', ''),
-        'PASSWORD': os.getenv('DB_PASSWORD', ''),
-        'HOST': os.getenv('DB_HOST', ''),
-        'PORT': os.getenv('DB_PORT', ''),
-        'OPTIONS': {"sslmode": "require"},
-    }
+    'default': dj_database_url.config(conn_max_age=600, ssl_require=True)
 }
 
 
