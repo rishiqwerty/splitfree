@@ -84,6 +84,12 @@ WSGI_APPLICATION = 'splitfree_backend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+try:
+    db_options = json.loads(os.getenv('DB_OPTIONS', '{}'))  # Parse DB_OPTIONS as JSON
+except json.JSONDecodeError as e:
+    print(f"Error parsing DB_OPTIONS: {e}")  # Log the error for debugging
+    db_options = {} 
+    
 DATABASES = {
     'default': {
         'ENGINE': os.getenv('DB_ENGINE', 'django.db.backends.sqlite3'),  # Default to SQLite
@@ -92,7 +98,7 @@ DATABASES = {
         'PASSWORD': os.getenv('DB_PASSWORD', ''),
         'HOST': os.getenv('DB_HOST', ''),
         'PORT': os.getenv('DB_PORT', ''),
-        'OPTIONS': json.loads(os.getenv('DB_OPTIONS', '{}')),
+        'OPTIONS': db_options,
     }
 }
 
