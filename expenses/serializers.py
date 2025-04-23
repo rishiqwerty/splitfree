@@ -1,11 +1,8 @@
 from rest_framework import serializers
+
+from auth.serializers import UserSerializer
 from .models import Expense, Split
 from django.contrib.auth.models import User
-
-class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ['id', 'username', 'email']
 
 class SplitInputSerializer(serializers.Serializer):
     user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())

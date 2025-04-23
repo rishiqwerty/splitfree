@@ -1,5 +1,6 @@
 import base64
 import json
+from .serializers import UserSerializer
 from firebase_admin import auth as firebase_auth, credentials, initialize_app
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -43,3 +44,10 @@ class GoogleLoginView(APIView):
             return Response({'token': token.key})
         except Exception as e:
             return Response({'error': str(e)}, status=400)
+
+class GetUserView(APIView):
+
+    def get(self, request):
+        user = request.user  # Get the currently authenticated user
+        serializer = UserSerializer(user)  # Serialize the user data
+        return Response(serializer.data) 

@@ -8,7 +8,7 @@ class GroupMembershipInline(admin.TabularInline):  # Use TabularInline for a tab
 
 class ExpenseGroupAdmin(admin.ModelAdmin):
     inlines = [GroupMembershipInline]  # Add the inline for managing members
-    list_display = ('name', 'created_at')  # Display these fields in the admin list view
+    list_display = ('name', 'created_at', 'uuid')  # Display these fields in the admin list view
     search_fields = ('name',)
 
 # @admin.register(GroupMembership)

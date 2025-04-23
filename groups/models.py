@@ -1,13 +1,15 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
-
+import uuid
 # Group Model: Represents a group of users
 class ExpenseGroup(models.Model):
     name = models.CharField(max_length=255)
     members = models.ManyToManyField(User, through='GroupMembership', related_name='expense_groups')
+    description = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(default=timezone.now)
-
+    uuid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_groups', null=True, blank=True)
     def __str__(self):
         return self.name
 
