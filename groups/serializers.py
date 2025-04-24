@@ -1,10 +1,17 @@
+from django.shortcuts import get_object_or_404
 from rest_framework import serializers
+from django.contrib.contenttypes.models import ContentType
 
-from auth.views import User
+from auth_app.utils import log_activity
+from auth_app.models import Activity
 from expenses.serializers import UserSerializer
 from .models import ExpenseGroup, GroupMembership
 
-
+def get_group_activities(group_id):
+    group = get_object_or_404(ExpenseGroup, id=group_id)
+    content_type = ContentType.objects.get_for_model(ExpenseGroup)
+    activities = Activity.objects.filter(content_type=content_type, object_id=group.id)
+    return activities
 class GroupMemberSerializer(serializers.ModelSerializer):
     members = UserSerializer(many=True, read_only=True)
     logged_in_user = serializers.SerializerMethodField()
@@ -13,7 +20,7 @@ class GroupMemberSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ExpenseGroup
-        fields = ['id','uuid', 'name', 'members','created_by', 'created_at', 'logged_in_user']
+        fields = ['id','uuid', 'name', 'members', 'simplify_debt','created_by', 'created_at', 'logged_in_user']
 
     def get_logged_in_user(self, obj):
         request = self.context.get('request')
@@ -38,6 +45,12 @@ class CreateGroupSerializer(serializers.ModelSerializer):
         group.members.add(request_user)
         group.created_by = request_user  # Set the creator of the group
         group.save()
+        log_activity(
+            user=request_user,
+            name='Group Created',
+            description=f"Group '{group.name}' was created. by {request_user.username}",
+            related_object=group,
+        )
         return group
     
 class AddUserToGroupSerializer(serializers.Serializer):
@@ -70,3 +83,13 @@ class GroupInfoSerializer(serializers.ModelSerializer):
         if request and hasattr(request, 'user') and request.user.is_authenticated:
             return GroupMembership.objects.filter(user=request.user, group=obj).exists()
         return False
+    
+class GroupActivitySerializer(serializers.ModelSerializer):
+    """
+    Serializer for retrieving group activity.
+    """
+    user = UserSerializer(read_only=True)
+    class Meta:
+        model = Activity
+        fields = ['user', 'name', 'description', 'timestamp']  # Adjust fields as needed
+    

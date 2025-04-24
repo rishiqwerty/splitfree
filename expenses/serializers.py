@@ -1,8 +1,10 @@
 from rest_framework import serializers
 
-from auth.serializers import UserSerializer
+from auth_app.serializers import UserSerializer
+from auth_app.utils import log_activity
 from .models import Expense, Split
 from django.contrib.auth.models import User
+from django.db import models
 
 class SplitInputSerializer(serializers.Serializer):
     user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
@@ -106,4 +108,122 @@ class ExpenseSerializer(serializers.ModelSerializer):
                 )
         return instance
 
-{"group": 1,"title": "Groceries","amount": "100.00","paid_by": 1,"split_between": [1,2],"splits":[{"amount": "50.00","user": 1,},{"amount": "50.00","user": 2,}],"notes": "Cucumber\r\nBittergourd","created_at": "2025-04-20T06:28:04Z"}
+class UserExpenseDetailSerializer(serializers.Serializer):
+    user = UserSerializer(read_only=True)
+    paid = serializers.DecimalField(max_digits=10, decimal_places=2)
+    owed = serializers.DecimalField(max_digits=10, decimal_places=2)
+class ExpenseSummarySerializer(serializers.Serializer):
+    total_spend = serializers.DecimalField(max_digits=10, decimal_places=2)
+    users_expense_details = UserExpenseDetailSerializer(many=True)
+    total_balance = serializers.DecimalField(max_digits=10, decimal_places=2)
+
+    def to_representation(self, instance):
+        """
+        Calculate and return the summary of expenses.
+        """
+        group = instance  # Assuming `instance` is an ExpenseGroup
+        expenses = group.expenses.all()  # Get all expenses for the group
+
+        # Calculate total spend
+        total_spend = expenses.aggregate(total=models.Sum('amount'))['total'] or 0
+
+        # Calculate user expense details
+        user_details = []
+        balances = {}
+        users = group.members.all()  # Get all members of the group
+        for user in users:
+            # Calculate total paid by the user
+            paid = expenses.filter(paid_by=user).aggregate(total=models.Sum('amount'))['total'] or 0
+
+            # Calculate total owed by the user
+            owed = (
+                Split.objects.filter(expense__in=expenses, user=user)
+                .aggregate(total=models.Sum('amount'))['total']
+                or 0
+            )
+            net_balance = paid - owed
+            balances[user.id] = net_balance
+
+            user_details.append({
+                'user': UserSerializer(user).data,
+                'paid': paid,
+                'owed': owed,
+            })
+            serialized_user_details = UserExpenseDetailSerializer(user_details, many=True).data
+        request = self.context.get('request')
+        simplify_enable = request.query_params.get('simplify', 'none').lower()
+        if simplify_enable == 'true' and not group.simplify_debt:
+            group.simplify_debt = True
+            group.save()
+            log_activity(
+                user=request.user,
+                name='Group Simplified',
+                description=f"Group '{group.name}' debts simplified.",
+                related_object=group,
+            )
+        elif simplify_enable == 'false' and group.simplify_debt:
+            group.simplify_debt = False
+            group.save()
+            log_activity(
+                user=request.user,
+                name='Group Simplified',
+                description=f"Group '{group.name}' debts unsimplified.",
+                related_object=group,
+            )
+        simplified_det = []
+        simplify = group.simplify_debt
+        if simplify:
+            
+            simplified_det = self.simplify_debts(balances)
+        # Calculate total balance
+        total_balance = sum(detail['paid'] - detail['owed'] for detail in user_details)
+
+        # Return the calculated data
+        return {
+            'total_spend': total_spend,
+            'users_expense_details': serialized_user_details,
+            'total_balance': total_balance,
+            'simplified_transactions':simplified_det if simplify else None,
+        }        
+
+
+    def simplify_debts(self, balances):
+        """
+        Simplify debts between users to minimize the number of transactions.
+        """
+        # Separate users into creditors (positive balance) and debtors (negative balance)
+        creditors = []
+        debtors = []
+        for user_id, balance in balances.items():
+            if balance > 0:
+                creditors.append((user_id, balance))
+            elif balance < 0:
+                debtors.append((user_id, -balance))  # Convert to positive for easier calculations
+
+        # Simplify transactions
+        transactions = []
+        while creditors and debtors:
+            creditor_id, credit_amount = creditors.pop(0)
+            debtor_id, debt_amount = debtors.pop(0)
+
+            # Determine the transaction amount (minimum of credit and debt)
+            transaction_amount = min(credit_amount, debt_amount)
+            debter = UserSerializer(User.objects.get(id=debtor_id)).data
+            creditor = UserSerializer(User.objects.get(id=creditor_id)).data
+            # Record the transaction
+            transactions.append({
+                'from_user': debter,
+                'to_user': creditor,
+                'amount': transaction_amount,
+            })
+
+            # Update remaining balances
+            credit_remaining = credit_amount - transaction_amount
+            debt_remaining = debt_amount - transaction_amount
+
+            if credit_remaining > 0:
+                creditors.insert(0, (creditor_id, credit_remaining))
+            if debt_remaining > 0:
+                debtors.insert(0, (debtor_id, debt_remaining))
+
+        return transactions

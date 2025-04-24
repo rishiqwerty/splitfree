@@ -9,6 +9,7 @@ class ExpenseGroup(models.Model):
     description = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(default=timezone.now)
     uuid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    simplify_debt = models.BooleanField(default=False)  # Flag to indicate if the group should simplify debts
     created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_groups', null=True, blank=True)
     def __str__(self):
         return self.name

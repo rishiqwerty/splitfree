@@ -3,14 +3,28 @@ from rest_framework import generics
 from rest_framework import status
 from django.core.exceptions import PermissionDenied
 from rest_framework.response import Response
+from auth_app.utils import log_activity
+from expenses.models import Expense
 from groups.models import ExpenseGroup, GroupMembership
-from .serializers import AddUserToGroupSerializer, CreateGroupSerializer, GroupInfoSerializer, GroupMemberSerializer
+from .serializers import AddUserToGroupSerializer, CreateGroupSerializer, GroupActivitySerializer, GroupInfoSerializer, GroupMemberSerializer
 from django.contrib.auth import get_user_model
 from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny
+from django.contrib.contenttypes.models import ContentType
+from auth_app.models import Activity
 
 User = get_user_model()
 
+#TBD : Need to move activiity logging to a signal
+def get_group_activities(group_id):
+    group = get_object_or_404(ExpenseGroup, id=group_id)
+    content_type = ContentType.objects.get_for_model(ExpenseGroup)
+    expense_content_type = ContentType.objects.get_for_model(Expense)
+    expense_ids = group.expenses.values_list('id', flat=True)  # Get all expense IDs in the group
+    expense_activities = Activity.objects.filter(content_type=expense_content_type, object_id__in=expense_ids)
+    activities = Activity.objects.filter(content_type=content_type, object_id=group.id)
+    all_activities = activities.union(expense_activities).order_by('-timestamp')
+    return all_activities
 class GroupMembersView(generics.ListAPIView):
     """
     View to list all members of a group.
@@ -58,7 +72,12 @@ class AddUserToGroupView(APIView):
         if GroupMembership.objects.filter(user=request.user, group=group).exists():
             return Response({'error': 'You are already a member of this group.','id':group.id}, status=status.HTTP_200_OK)
         GroupMembership.objects.create(user=request.user, group=group)
-
+        log_activity(
+            user=request.user,
+            name='User Joined Group',
+            description=f"User {request.user.username} joined group '{group.name} via url'.",
+            related_object=group,
+        )
         return Response({'message': f'User {request.user.username} added to group {group.name}.', 'id':group.id}, status=status.HTTP_200_OK)
 
 class GroupAll(APIView):
@@ -79,3 +98,14 @@ class GroupAll(APIView):
             return Response(serializer.data)
         else:
             return Response({"error": "UUID not provided."}, status=status.HTTP_400_BAD_REQUEST)
+
+class GroupActivityView(generics.ListAPIView):
+    """
+    API view to get the activity of a group.
+    """
+    serializer_class = GroupActivitySerializer
+    
+    def get_queryset(self,):
+        group_id = self.kwargs.get('group_id')
+        if group_id:                        
+            return get_group_activities(group_id)

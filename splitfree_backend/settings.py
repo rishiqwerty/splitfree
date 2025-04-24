@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     'groups',
     'expenses',
     'transactions',
+    'auth_app',
     'django.contrib.admin',
     'rest_framework.authtoken',
     'django.contrib.auth',
