@@ -12,6 +12,7 @@ class Expense(models.Model):
     split_between = models.ManyToManyField(User, related_name='split_expenses')
     created_at = models.DateTimeField(default=timezone.now)
     notes = models.TextField(blank=True, null=True)
+    expense_icon = models.CharField(max_length=255, blank=True, null=True, default='💸')  # Optional icon for the expense
 
     def __str__(self):
         return f"{self.title} - {self.amount} paid by {self.paid_by.username}"

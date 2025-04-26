@@ -11,6 +11,7 @@ class ExpenseGroup(models.Model):
     uuid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     simplify_debt = models.BooleanField(default=False)  # Flag to indicate if the group should simplify debts
     created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_groups', null=True, blank=True)
+    group_icon = models.CharField(max_length=255, blank=True, null=True, default='👥')  # Optional icon for the group
     def __str__(self):
         return self.name
 

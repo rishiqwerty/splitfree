@@ -2,6 +2,7 @@ from rest_framework import serializers
 
 from auth_app.serializers import UserSerializer
 from auth_app.utils import log_activity
+from expenses.utils import get_expense_icon
 from .models import Expense, Split
 from django.contrib.auth.models import User
 from django.db import models
@@ -28,7 +29,7 @@ class ExpenseSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Expense
-        fields = ['id', 'group', 'title', 'amount', 'paid_by', 'paid_by_id', 'split_between', 'splits_detail', 'splits', 'notes', 'created_at']
+        fields = ['id', 'group', 'expense_icon', 'title', 'amount', 'paid_by', 'paid_by_id', 'split_between', 'splits_detail', 'splits', 'notes', 'created_at']
     
     def validate(self, data):
         group = data.get('group')
@@ -75,6 +76,7 @@ class ExpenseSerializer(serializers.ModelSerializer):
         expense = Expense.objects.create(**validated_data)
         expense.paid_by = paid_by_user
         expense.split_between.set(split_between_users)
+        expense.expense_icon=get_expense_icon(expense.title, expense.notes)
         expense.save()
 
         for split in splits_data:
@@ -89,12 +91,15 @@ class ExpenseSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         # Handle updates to an existing expense
         split_between_users = validated_data.pop('split_between', None)
-        instance = super().update(instance, validated_data)
+        paid_by_user = validated_data.pop('paid_by_id')
+
         splits_data = validated_data.pop('splits', None)
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         if split_between_users is not None:
             instance.split_between.set(split_between_users)  # Update the split users
+        if paid_by_user is not None:
+            instance.paid_by = paid_by_user
         instance.save()
         if splits_data is not None:
             # Remove old splits

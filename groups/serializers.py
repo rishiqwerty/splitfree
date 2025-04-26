@@ -5,6 +5,7 @@ from django.contrib.contenttypes.models import ContentType
 from auth_app.utils import log_activity
 from auth_app.models import Activity
 from expenses.serializers import UserSerializer
+from expenses.utils import get_expense_icon
 from .models import ExpenseGroup, GroupMembership
 
 def get_group_activities(group_id):
@@ -20,7 +21,7 @@ class GroupMemberSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ExpenseGroup
-        fields = ['id','uuid', 'name', 'members', 'simplify_debt','created_by', 'created_at', 'logged_in_user']
+        fields = ['id','uuid', 'name', 'group_icon', 'members', 'simplify_debt','created_by', 'created_at', 'logged_in_user']
 
     def get_logged_in_user(self, obj):
         request = self.context.get('request')
@@ -34,13 +35,16 @@ class CreateGroupSerializer(serializers.ModelSerializer):
     """
     Serializer for creating a new group.
     """
+    user_selected_icon = serializers.BooleanField(write_only=True, required=False)
     class Meta:
         model = ExpenseGroup
-        fields = ['id', 'uuid', 'name', 'description', 'members', 'created_at']  # Include 'members' if you want to allow adding members during creation
+        fields = ['id', 'uuid', 'name', 'description', 'members', 'created_at', 'group_icon', 'user_selected_icon']  # Include 'members' if you want to allow adding members during creation
 
     def create(self, validated_data):
         request_user = self.context['request'].user
-
+        user_selected_icon = validated_data.pop('user_selected_icon', None)
+        if user_selected_icon:
+            validated_data['group_icon'] = get_expense_icon(validated_data['name'], validated_data['description'])
         group = ExpenseGroup.objects.create(**validated_data)
         group.members.add(request_user)
         group.created_by = request_user  # Set the creator of the group
