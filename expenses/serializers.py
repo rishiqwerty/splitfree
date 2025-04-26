@@ -6,6 +6,7 @@ from expenses.utils import get_expense_icon
 from .models import Expense, Split
 from django.contrib.auth.models import User
 from django.db import models
+from django.db.models import Count
 
 class SplitInputSerializer(serializers.Serializer):
     user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
@@ -29,7 +30,7 @@ class ExpenseSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Expense
-        fields = ['id', 'group', 'expense_icon', 'title', 'amount', 'paid_by', 'paid_by_id', 'split_between', 'splits_detail', 'splits', 'notes', 'created_at']
+        fields = ['id', 'group', 'expense_icon', 'title', 'amount', 'paid_by', 'paid_by_id', 'split_between', 'splits_detail', 'splits', 'notes', 'created_at', 'expense_date']
     
     def validate(self, data):
         group = data.get('group')
@@ -43,7 +44,6 @@ class ExpenseSerializer(serializers.ModelSerializer):
         group_members = group.members.all()
 
         # Check if paid_by user is part of the group
-        print("Paid by user:", paid_by)
         if not group_members.filter(id=paid_by.id):
             raise serializers.ValidationError("Payer must be a member of the group.")
 
@@ -94,6 +94,7 @@ class ExpenseSerializer(serializers.ModelSerializer):
         paid_by_user = validated_data.pop('paid_by_id')
 
         splits_data = validated_data.pop('splits', None)
+        print(" Te-------->>>>> ",validated_data.get('expense_date'))
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         if split_between_users is not None:
@@ -117,6 +118,7 @@ class UserExpenseDetailSerializer(serializers.Serializer):
     user = UserSerializer(read_only=True)
     paid = serializers.DecimalField(max_digits=10, decimal_places=2)
     owed = serializers.DecimalField(max_digits=10, decimal_places=2)
+    paid_transactions = serializers.DecimalField(max_digits=10, decimal_places=2)
 class ExpenseSummarySerializer(serializers.Serializer):
     total_spend = serializers.DecimalField(max_digits=10, decimal_places=2)
     users_expense_details = UserExpenseDetailSerializer(many=True)
@@ -128,7 +130,7 @@ class ExpenseSummarySerializer(serializers.Serializer):
         """
         group = instance  # Assuming `instance` is an ExpenseGroup
         expenses = group.expenses.all()  # Get all expenses for the group
-
+        transactions = group.transactions.all()  # Get all transactions for the group
         # Calculate total spend
         total_spend = expenses.aggregate(total=models.Sum('amount'))['total'] or 0
 
@@ -138,21 +140,27 @@ class ExpenseSummarySerializer(serializers.Serializer):
         users = group.members.all()  # Get all members of the group
         for user in users:
             # Calculate total paid by the user
+            print("count before exclude", expenses.count())
+            expenses=expenses.annotate(split_count=Count('splits')).exclude(split_count=1)
+            print("count after exclude", expenses.count())
             paid = expenses.filter(paid_by=user).aggregate(total=models.Sum('amount'))['total'] or 0
-
+            paid_transactions = transactions.filter(from_user=user).aggregate(total=models.Sum('amount'))['total'] or 0
             # Calculate total owed by the user
             owed = (
                 Split.objects.filter(expense__in=expenses, user=user)
+                .annotate(split_count=Count('expense__splits'))
+                .exclude(split_count=1)
                 .aggregate(total=models.Sum('amount'))['total']
                 or 0
             )
-            net_balance = paid - owed
+            net_balance = paid - owed + paid_transactions
             balances[user.id] = net_balance
 
             user_details.append({
                 'user': UserSerializer(user).data,
                 'paid': paid,
-                'owed': owed,
+                'owed': abs(net_balance) if net_balance < 0 else 0,
+                'paid_transactions': paid_transactions,
             })
             serialized_user_details = UserExpenseDetailSerializer(user_details, many=True).data
         request = self.context.get('request')
@@ -189,6 +197,7 @@ class ExpenseSummarySerializer(serializers.Serializer):
             'users_expense_details': serialized_user_details,
             'total_balance': total_balance,
             'simplified_transactions':simplified_det if simplify else None,
+            'paid_transactions': paid_transactions,
         }        
 
 

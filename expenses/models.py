@@ -11,6 +11,7 @@ class Expense(models.Model):
     paid_by = models.ForeignKey(User, related_name='paid_expenses', on_delete=models.CASCADE)
     split_between = models.ManyToManyField(User, related_name='split_expenses')
     created_at = models.DateTimeField(default=timezone.now)
+    expense_date = models.DateTimeField(default=timezone.now)  # Date of the expense
     notes = models.TextField(blank=True, null=True)
     expense_icon = models.CharField(max_length=255, blank=True, null=True, default='💸')  # Optional icon for the expense
 

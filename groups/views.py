@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from auth_app.utils import log_activity
 from expenses.models import Expense
 from groups.models import ExpenseGroup, GroupMembership
+from transactions.models import Transaction
 from .serializers import AddUserToGroupSerializer, CreateGroupSerializer, GroupActivitySerializer, GroupInfoSerializer, GroupMemberSerializer
 from django.contrib.auth import get_user_model
 from rest_framework.views import APIView
@@ -21,9 +22,12 @@ def get_group_activities(group_id):
     content_type = ContentType.objects.get_for_model(ExpenseGroup)
     expense_content_type = ContentType.objects.get_for_model(Expense)
     expense_ids = group.expenses.values_list('id', flat=True)  # Get all expense IDs in the group
+    transaction_content_type = ContentType.objects.get_for_model(Transaction)
+    transaction_ids = group.transactions.values_list('id', flat=True)
     expense_activities = Activity.objects.filter(content_type=expense_content_type, object_id__in=expense_ids)
+    transaction_activities = Activity.objects.filter(content_type=transaction_content_type, object_id__in=transaction_ids)
     activities = Activity.objects.filter(content_type=content_type, object_id=group.id)
-    all_activities = activities.union(expense_activities).order_by('-timestamp')
+    all_activities = activities.union(expense_activities, transaction_activities).order_by('-timestamp')
     return all_activities
 class GroupMembersView(generics.ListAPIView):
     """
