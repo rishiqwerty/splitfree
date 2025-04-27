@@ -23,9 +23,9 @@ Note: Both backend and frontend is deployed in free tier service, so it may take
 ## Tech Stack
 
 - **Backend Framework**: [Django](https://www.djangoproject.com/)
-- **Database**: PostgreSQL / MySQL
-- **Authentication**: JWT / OAuth2
-- **Hosting**: AWS / Heroku / Docker
+- **Database**: PostgreSQL / sqllite
+- **Authentication**: OAuth2
+- **Hosting**: Render
 
 ## Pre-requisites
 - Python 3.13(Preferred)
