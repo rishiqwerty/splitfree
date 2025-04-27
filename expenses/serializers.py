@@ -1,3 +1,5 @@
+from collections import defaultdict
+from decimal import Decimal
 from rest_framework import serializers
 
 from auth_app.serializers import UserSerializer
@@ -188,6 +190,9 @@ class ExpenseSummarySerializer(serializers.Serializer):
         if simplify:
             
             simplified_det = self.simplify_debts(balances)
+        else:
+            # Calculate non-simplified debts
+            non_simplified_transactions = self.calculate_non_simplified_debts(expenses, transactions)
         # Calculate total balance
         total_balance = sum(detail['paid'] - detail['owed'] for detail in user_details)
 
@@ -197,9 +202,74 @@ class ExpenseSummarySerializer(serializers.Serializer):
             'users_expense_details': serialized_user_details,
             'total_balance': total_balance,
             'simplified_transactions':simplified_det if simplify else None,
-            'paid_transactions': paid_transactions,
+            'non_simplified_transactions': non_simplified_transactions if not simplify else None,
         }        
 
+    def calculate_non_simplified_debts(self, expenses, transactions):
+        """
+        Calculate non-simplified debts for each expense, including paid transactions.
+        """
+        non_simplified_transactions = []
+        grouped_transactions = defaultdict(lambda: defaultdict(Decimal))
+        paid_transactions_tracker = defaultdict(lambda: defaultdict(Decimal))  # Track applied paid transactions
+        for expense in expenses:
+            splits = expense.splits.all()
+            for split in splits:
+                if split.user != expense.paid_by:
+                    # Adjust the amount owed by including paid transactions
+                    paid_transactions = transactions.filter(from_user=split.user, to_user=expense.paid_by).aggregate(
+                        total=models.Sum('amount')
+                    )['total'] or 0
+
+                    already_applied = paid_transactions_tracker[split.user.id][expense.paid_by.id]
+                    remaining_paid_transactions = paid_transactions - already_applied
+
+                    adjusted_amount = split.amount - max(remaining_paid_transactions,Decimal(0))
+                    if remaining_paid_transactions > 0:
+                        paid_transactions_tracker[split.user.id][expense.paid_by.id] += min(split.amount, remaining_paid_transactions)
+
+                    # if adjusted_amount > 0:
+                    #     non_simplified_transactions.append({
+                    #         'from_user': UserSerializer(split.user).data,
+                    #         'to_user': UserSerializer(expense.paid_by).data,
+                    #         'amount': adjusted_amount
+                    #     })
+                    if adjusted_amount > 0:
+                        grouped_transactions[split.user.id][expense.paid_by.id] += adjusted_amount
+            # 2️⃣ Consolidate pairwise debts
+            consolidated_transactions = []
+            processed_pairs = set()
+
+            for from_user_id in list(grouped_transactions.keys()):
+                to_user_dict = grouped_transactions[from_user_id]
+                for to_user_id in list(to_user_dict.keys()):
+                    amount = to_user_dict[to_user_id]
+                    if amount <= 0:
+                        continue
+
+                    pair_key = tuple(sorted([from_user_id, to_user_id]))
+                    if pair_key in processed_pairs:
+                        continue
+
+                    reverse_amount = grouped_transactions[to_user_id].get(from_user_id, Decimal(0))
+                    net_amount = amount - reverse_amount
+
+                    if net_amount > 0:
+                        consolidated_transactions.append({
+                            'from_user': UserSerializer(User.objects.get(id=from_user_id)).data,
+                            'to_user': UserSerializer(User.objects.get(id=to_user_id)).data,
+                            'amount': net_amount,
+                        })
+                    elif net_amount < 0:
+                        consolidated_transactions.append({
+                            'from_user': UserSerializer(User.objects.get(id=to_user_id)).data,
+                            'to_user': UserSerializer(User.objects.get(id=from_user_id)).data,
+                            'amount': abs(net_amount),
+                        })
+
+                    processed_pairs.add(pair_key)
+
+        return consolidated_transactions
 
     def simplify_debts(self, balances):
         """
