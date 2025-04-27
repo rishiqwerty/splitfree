@@ -209,7 +209,7 @@ class ExpenseSummarySerializer(serializers.Serializer):
         """
         Calculate non-simplified debts for each expense, including paid transactions.
         """
-        non_simplified_transactions = []
+        consolidated_transactions = []
         grouped_transactions = defaultdict(lambda: defaultdict(Decimal))
         paid_transactions_tracker = defaultdict(lambda: defaultdict(Decimal))  # Track applied paid transactions
         for expense in expenses:

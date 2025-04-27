@@ -7,6 +7,9 @@ from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from django.contrib.auth import get_user_model
 from rest_framework.authtoken.models import Token
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.permissions import IsAuthenticated
+
 import os
 
 firebase_cred = os.getenv('FIREBASE_CREDENTIALS')
@@ -51,3 +54,15 @@ class GetUserView(APIView):
         user = request.user  # Get the currently authenticated user
         serializer = UserSerializer(user)  # Serialize the user data
         return Response(serializer.data) 
+
+class LogoutView(APIView):
+    """
+    API view to log out a user by deleting their authentication token.
+    """
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        # Delete the user's token
+        request.user.auth_token.delete()
+        return Response({'message': 'Logged out successfully'}, status=200)
