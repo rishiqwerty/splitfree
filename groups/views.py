@@ -7,7 +7,7 @@ from auth_app.utils import log_activity
 from expenses.models import Expense
 from groups.models import ExpenseGroup, GroupMembership
 from transactions.models import Transaction
-from .serializers import AddUserToGroupSerializer, CreateGroupSerializer, GroupActivitySerializer, GroupInfoSerializer, GroupMemberSerializer
+from .serializers import AddUserToGroupSerializer, CreateGroupSerializer, GroupActivitySerializer, GroupInfoSerializer, GroupMemberSerializer, GroupOverviewSerializer
 from django.contrib.auth import get_user_model
 from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny
@@ -113,3 +113,15 @@ class GroupActivityView(generics.ListAPIView):
         group_id = self.kwargs.get('group_id')
         if group_id:                        
             return get_group_activities(group_id)
+
+class GroupOverview(APIView):
+    """
+    API view to get the overview of a group.
+    """
+    serializer_class = GroupOverviewSerializer
+    def get(self, request, group_id):
+        group = get_object_or_404(ExpenseGroup, id=group_id)
+        if request.user not in group.members.all():
+            return Response({'error': 'You are not a member of this group.'}, status=403)
+        serializer = self.serializer_class(group, context={'request': request})
+        return Response(serializer.data)

@@ -4,8 +4,9 @@ from django.contrib.contenttypes.models import ContentType
 
 from auth_app.utils import log_activity
 from auth_app.models import Activity
-from expenses.serializers import UserSerializer
+from expenses.serializers import ExpenseSummarySerializer, UserSerializer
 from expenses.utils import get_expense_icon
+from utils.gemini_api_call import generate_content
 from .models import ExpenseGroup, GroupMembership
 
 def get_group_activities(group_id):
@@ -96,4 +97,16 @@ class GroupActivitySerializer(serializers.ModelSerializer):
     class Meta:
         model = Activity
         fields = ['user', 'name', 'description', 'timestamp']  # Adjust fields as needed
-    
+
+class GroupOverviewSerializer(serializers.Serializer):
+    """
+    Serializer for retrieving group overview.
+    """
+    ai_overview = serializers.SerializerMethodField()
+
+    def get_ai_overview(self, obj):
+        expense = ExpenseSummarySerializer(obj, context={'request': self.context['request']})
+        ai_overview = generate_content(f"""Generate a one liner random summary for current
+                                        month  using following json response also add one 
+                                       random money savings tip:  json:{expense.data} make sure curreny is rupees""").replace('\n','')
+        return ai_overview

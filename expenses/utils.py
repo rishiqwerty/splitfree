@@ -1,4 +1,5 @@
 from rapidfuzz import fuzz
+from utils.gemini_api_call import generate_content 
 ICON_MAP = {
     'transport': ['uber', 'taxi', 'cab', 'ola', 'ride'],
     'flight': ['flight', 'airport', 'airfare'],
@@ -52,7 +53,12 @@ def get_expense_icon(title, description=None):
                 if score > best_score:
                     best_score = score
                     best_match = category
-    if best_score>70:
+    if best_score>80:
         return ICON_EMOJIS[best_match]
 
+    generated_icon = generate_content(f"Suggest one emoji based on this text, suggest only single emoji no text: {text_priority}").strip()
+    
+    if generated_icon:
+        return generated_icon
     return "💸"
+
