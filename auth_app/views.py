@@ -12,7 +12,7 @@ from rest_framework.permissions import IsAuthenticated
 
 import os
 
-firebase_cred = os.getenv('FIREBASE_CREDENTIALS')
+firebase_cred = os.getenv("FIREBASE_CREDENTIALS")
 firebase_b64 = os.getenv("FIREBASE_CREDENTIALS_B64")
 
 if firebase_b64:
@@ -26,43 +26,49 @@ initialize_app(cred)
 
 User = get_user_model()
 
+
 class GoogleLoginView(APIView):
     permission_classes = [AllowAny]
+
     def post(self, request):
-        id_token = request.data.get('id_token')
+        id_token = request.data.get("id_token")
         if not id_token:
-            return Response({'error': 'ID token required'}, status=400)
+            return Response({"error": "ID token required"}, status=400)
 
         try:
             decoded = firebase_auth.verify_id_token(id_token)
-            email = decoded.get('email')
-            name = decoded.get('name')
+            email = decoded.get("email")
+            name = decoded.get("name")
 
             if not email:
-                return Response({'error': 'Email not found'}, status=400)
+                return Response({"error": "Email not found"}, status=400)
 
-            user, _ = User.objects.get_or_create(username=email, defaults={"email": email, "first_name": name})
+            user, _ = User.objects.get_or_create(
+                username=email, defaults={"email": email, "first_name": name}
+            )
             token, _ = Token.objects.get_or_create(user=user)
 
-            return Response({'token': token.key})
+            return Response({"token": token.key})
         except Exception as e:
-            return Response({'error': str(e)}, status=400)
+            return Response({"error": str(e)}, status=400)
+
 
 class GetUserView(APIView):
-
     def get(self, request):
         user = request.user  # Get the currently authenticated user
         serializer = UserSerializer(user)  # Serialize the user data
-        return Response(serializer.data) 
+        return Response(serializer.data)
+
 
 class LogoutView(APIView):
     """
     API view to log out a user by deleting their authentication token.
     """
+
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
         # Delete the user's token
         request.user.auth_token.delete()
-        return Response({'message': 'Logged out successfully'}, status=200)
+        return Response({"message": "Logged out successfully"}, status=200)

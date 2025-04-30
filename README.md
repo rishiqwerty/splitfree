@@ -67,7 +67,7 @@ Note: Both backend and frontend is deployed in free tier service, so it may take
 6. [Optional] If using a local LLM, download the model and run it:
    ```
     ollama pull codellama
-   ```  
+   ```
 Note: To enable Google login, you’ll need to configure it in the Firebase Console. Follow the official guide here:
 👉 Firebase Google Sign-In Setup
 

@@ -1,6 +1,7 @@
 from django.contrib.contenttypes.models import ContentType
 from .models import Activity
 
+
 def log_activity(user, name, description, related_object):
     """
     Logs an activity in the system.
