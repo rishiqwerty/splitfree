@@ -18,19 +18,23 @@ Note: Both backend and frontend is deployed in free tier service, so it may take
 - Add, track, and manage shared expenses within groups — automatically calculate individual shares.
 - Maintain a chronological log of all activities and changes made within each group for complete transparency.
 - Automatically compute who owes whom and optimize settlements to minimize the number of transactions required.
+- Get smart overviews, spending summaries, and detailed expense breakdowns powered by AI.
+- Enhance group and expense entries with AI-detected icons for quick visual context.
 - Clean, consistent, and well-structured API endpoints designed following REST best practices.
 
 ## Tech Stack
 
 - **Backend Framework**: [Django](https://www.djangoproject.com/)
 - **Database**: PostgreSQL / sqllite
-- **Authentication**: OAuth2
+- **Authentication**: Google OAuth2 (Firebase)
 - **Hosting**: Render
 
 ## Pre-requisites
 - Python 3.13(Preferred)
 - [Poetry](https://python-poetry.org/)
 - [direnv](https://direnv.net/)
+- [ollama](https://ollama.com/)(Optional)
+
 ## Installation
 
 1. Clone the repository:
@@ -60,20 +64,33 @@ Note: Both backend and frontend is deployed in free tier service, so it may take
     ```
     python manage.py runserver
     ```
-Note: To get google auth you need to 
+6. [Optional] If using a local LLM, download the model and run it:
+   ```
+    ollama pull codellama
+   ```  
+Note: To enable Google login, you’ll need to configure it in the Firebase Console. Follow the official guide here:
+👉 Firebase Google Sign-In Setup
 
 ## Environment Variables
 
 Create a `.envrc.local`(if using direnv) file in the project root and add the following:
 
 ```
-    export USE_SQLITE=true # I use it for local development
-    export DATABASE_URL=<url>
-    export FIREBASE_CREDENTIALS=xx-xx-xxx.json # If using firebase creds json file put file name location here
-    export FIREBASE_CREDENTIALS_B64='xxxxxx-xxxx' # If using base64 encrypted creds then put its value here
+    export USE_SQLITE=true                          # Use SQLite for local development
+    export DATABASE_URL=<url>                       # Database connection string
+    export FIREBASE_CREDENTIALS=xx-xx-xxx.json      # Path to Firebase credentials JSON file (if using file-based creds)
+    export FIREBASE_CREDENTIALS_B64='xxxxxx-xxxx'   # Base64-encoded Firebase credentials (if using inline creds)
+
+    export GEMINI_API_KEY=<API_KEY>                 # API key for AI overviews and group/expense icon detection
+
+    # Local LLM config
+    export USE_LOCAL_LLM=false                      # Set to true to use a local LLM instance
+    export LOCAL_LLM_URL=http://localhost:11434/api/generate  # URL for local LLM endpoint
+    export LLM_MODEL=codellama                      # Name of the local model to use
 ```
 Note:
 - Make sure to run direnv allow, if there is any changes in this file
+- I am using ollama for local llm so make sure it is up and running, and the said model is downloaded
 
 ## API Endpoints
 
@@ -101,7 +118,6 @@ Note:
 
 ## Upcoming changes
 - Payment QR/links for individual for easy payments
-- Get smart overviews, spending summaries, and detailed expense breakdowns powered by AI.
 - User profile
 - Not just for groups — track and manage your personal expenses within the same platform.
 
