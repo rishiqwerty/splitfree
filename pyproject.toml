@@ -24,7 +24,10 @@ dependencies = [
     "sentence-transformers (>=4.1.0,<5.0.0)",
     "rapidfuzz (>=3.13.0,<4.0.0)",
     "google-genai (>=1.12.1,<2.0.0)",
-    "pre-commit (>=4.2.0,<5.0.0)"
+    "pre-commit (>=4.2.0,<5.0.0)",
+    "pytest (>=8.3.5,<9.0.0)",
+    "pytest-django (>=4.11.1,<5.0.0)",
+    "drf-spectacular[sidecar] (>=0.28.0,<0.29.0)"
 ]
 
 [tool.poetry]
@@ -39,3 +42,8 @@ flake8 = "^7.2.0"
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "splitfree_backend.settings"
+# -- recommended but optional:
+python_files = ["test_*.py", "*_test.py", "splitfree_backend/python/*.py"]

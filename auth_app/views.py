@@ -28,6 +28,18 @@ User = get_user_model()
 
 
 class GoogleLoginView(APIView):
+    """
+    API view to handle Google login.
+
+    This view verifies the Google ID token provided by the frontend,
+    retrieves the user's email and name, and creates or retrieves a user
+    in the database. It then generates an authentication token for the user
+    and returns it in the response.
+
+    Methods:
+        post(request): Handles the Google login process.
+    """
+
     permission_classes = [AllowAny]
 
     def post(self, request):
@@ -54,6 +66,16 @@ class GoogleLoginView(APIView):
 
 
 class GetUserView(APIView):
+    """
+    API view to retrieve the currently authenticated user's details.
+
+    This view returns the details of the user associated with the
+    authentication token provided in the request.
+
+    Methods:
+        get(request): Retrieves the authenticated user's details.
+    """
+
     def get(self, request):
         user = request.user  # Get the currently authenticated user
         serializer = UserSerializer(user)  # Serialize the user data
