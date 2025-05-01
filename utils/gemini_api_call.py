@@ -8,7 +8,6 @@ client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 use_local_llm = os.getenv("USE_LOCAL_LLM")
 llm_url = os.getenv("LOCAL_LLM_URL")
 llm_model = os.getenv("LLM_MODEL")
-print("URL LLAM______", use_local_llm, llm_url, llm_model)
 
 
 def generate_content(requested_content):
@@ -27,7 +26,6 @@ def generate_content(requested_content):
                     },
                 },
             )
-            print("llm", response)
             return response.json().get("response", "")
         else:
             response = client.models.generate_content(

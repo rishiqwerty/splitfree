@@ -114,7 +114,6 @@ Note:
 
 - Free-tier hosting may cause slow initial load times.
 - Currently, authentication token is stored in local storage (moving to HTTP-only cookie soon).
-- Tests
 
 ## Upcoming changes
 - Payment QR/links for individual for easy payments

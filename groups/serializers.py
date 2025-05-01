@@ -97,7 +97,6 @@ class AddUserToGroupSerializer(serializers.Serializer):
         # Check if the user is already a member of the group
         if GroupMembership.objects.filter(user=request.user, group=group).exists():
             raise serializers.ValidationError("User is already a member of this group.")
-        print(data)
         return data
 
 
@@ -126,7 +125,6 @@ class GroupInfoSerializer(serializers.ModelSerializer):
 
     def get_already_member(self, obj):
         request = self.context.get("request")
-        print(request.user)
         if request and hasattr(request, "user") and request.user.is_authenticated:
             return GroupMembership.objects.filter(user=request.user, group=obj).exists()
         return False

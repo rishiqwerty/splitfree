@@ -16,4 +16,3 @@ def set_default_category(sender, instance, **kwargs):
             instance.expense_icon = get_expense_icon(
                 instance.name, instance.description
             )
-            print("Expense icon set to:", instance.expense_icon)

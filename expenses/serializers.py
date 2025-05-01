@@ -97,7 +97,6 @@ class ExpenseSerializer(serializers.ModelSerializer):
         # Handle the creation of an expense
         split_between_users = validated_data.pop("split_between")
         paid_by_user = validated_data.pop("paid_by_id")
-        print("Split between users:", validated_data)
 
         splits_data = validated_data.pop("splits")
 
@@ -120,7 +119,6 @@ class ExpenseSerializer(serializers.ModelSerializer):
         paid_by_user = validated_data.pop("paid_by_id")
 
         splits_data = validated_data.pop("splits", None)
-        print(" Te-------->>>>> ", validated_data.get("expense_date"))
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         if split_between_users is not None:
@@ -162,16 +160,13 @@ class ExpenseSummarySerializer(serializers.Serializer):
         total_spend = expenses.aggregate(total=models.Sum("amount"))["total"] or 0
 
         # Calculate user expense details
-        user_details = []
         balances = {}
         users = group.members.all()  # Get all members of the group
         for user in users:
             # Calculate total paid by the user
-            print("count before exclude", expenses.count())
             expenses = expenses.annotate(split_count=Count("splits")).exclude(
                 split_count=1
             )
-            print("count after exclude", expenses.count())
             paid = (
                 expenses.filter(paid_by=user).aggregate(total=models.Sum("amount"))[
                     "total"
@@ -195,17 +190,6 @@ class ExpenseSummarySerializer(serializers.Serializer):
             net_balance = paid - owed + paid_transactions
             balances[user.id] = net_balance
 
-            user_details.append(
-                {
-                    "user": UserSerializer(user).data,
-                    "paid": paid,
-                    "owed": abs(net_balance) if net_balance < 0 else 0,
-                    "paid_transactions": paid_transactions,
-                }
-            )
-            serialized_user_details = UserExpenseDetailSerializer(
-                user_details, many=True
-            ).data
         request = self.context.get("request")
         simplify_enable = request.query_params.get("simplify", "none").lower()
         if simplify_enable == "true" and not group.simplify_debt:
@@ -236,14 +220,10 @@ class ExpenseSummarySerializer(serializers.Serializer):
             non_simplified_transactions = self.calculate_non_simplified_debts(
                 expenses, transactions
             )
-        # Calculate total balance
-        total_balance = sum(detail["paid"] - detail["owed"] for detail in user_details)
 
         # Return the calculated data
         return {
             "total_spend": total_spend,
-            "users_expense_details": serialized_user_details,
-            "total_balance": total_balance,
             "simplified_transactions": simplified_det if simplify else None,
             "non_simplified_transactions": non_simplified_transactions
             if not simplify
@@ -284,12 +264,6 @@ class ExpenseSummarySerializer(serializers.Serializer):
                             expense.paid_by.id
                         ] += min(split.amount, remaining_paid_transactions)
 
-                    # if adjusted_amount > 0:
-                    #     non_simplified_transactions.append({
-                    #         'from_user': UserSerializer(split.user).data,
-                    #         'to_user': UserSerializer(expense.paid_by).data,
-                    #         'amount': adjusted_amount
-                    #     })
                     if adjusted_amount > 0:
                         grouped_transactions[split.user.id][
                             expense.paid_by.id
