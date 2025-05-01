@@ -38,8 +38,7 @@ class ExpenseViewTests(APITestCase):
         )
 
         # Authenticate user1
-        self.token = Token.objects.create(user=self.user1)
-        self.client.credentials(HTTP_AUTHORIZATION=f"Token {self.token.key}")
+        self.client.force_authenticate(user=self.user1)
 
         # URLs
         self.create_expense_url = reverse("create_expense")

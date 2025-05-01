@@ -118,6 +118,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
+        "auth_app.authentication.FirebaseAuthentication",
         "rest_framework.authentication.TokenAuthentication",  # Token-based auth
         "rest_framework.authentication.SessionAuthentication",  # Session-based auth
     ],
