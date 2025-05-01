@@ -9,6 +9,7 @@ from django.contrib.auth import get_user_model
 from rest_framework.authtoken.models import Token
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
+from django.http import JsonResponse
 
 import os
 
@@ -94,3 +95,10 @@ class LogoutView(APIView):
         # Delete the user's token
         request.user.auth_token.delete()
         return Response({"message": "Logged out successfully"}, status=200)
+
+
+def health_check(request):
+    """
+    Health check view to verify the server is running.
+    """
+    return JsonResponse({"status": "ok"}, status=200)
