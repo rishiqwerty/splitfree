@@ -1,20 +1,19 @@
 name: Django CI
 
 env:
-  
-SECRET_KEY=""
-DB_ENGINE="django.db.backends.postgresql"
-DB_HOST="db.dfbvdfbvdf.supabase.co"
-DB_PORT="5432"
-DB_NAME="postgres"
-DB_USER="postgres"
-DB_PASSWORD="dfgfgfdgfdgfdg"
-DB_OPTIONS="require"
+  SECRET_KEY:""
+  DB_ENGINE:"django.db.backends.postgresql"
+  DB_HOST:"db.dfbvdfbvdf.supabase.co"
+  DB_PORT:"5432"
+  DB_NAME:"postgres"
+  DB_USER:"postgres"
+  DB_PASSWORD:"dfgfgfdgfdgfdg"
+  DB_OPTIONS:"require"
 
-USE_LOCAL_LLM=false
-LOCAL_LLM_URL=http://localhost:11434/api/generate
-LLM_MODEL=codellama
-USE_SQLITE=true
+  USE_LOCAL_LLM:false
+  LOCAL_LLM_URL:http://localhost:11434/api/generate
+  LLM_MODEL:codellama
+  USE_SQLITE:true
 
 on:
   push:
