@@ -15,6 +15,9 @@ env:
   LLM_MODEL: codellama
   USE_SQLITE: true
   GEMINI_API_KEY: dummykey
+  FIREBASE_CREDENTIALS : dummy.json
+  FIREBASE_CREDENTIALS_BASE64 : testioi
+
 
 on:
   push:
