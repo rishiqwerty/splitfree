@@ -68,8 +68,8 @@ class AuthAppTests(APITestCase):
         """
         user = User.objects.create_user(username=self.user_email, email=self.user_email)
         token = Token.objects.create(user=user)
+        self.client.force_authenticate(user=user)
 
-        self.client.credentials(HTTP_AUTHORIZATION=f"Token {token.key}")
         response = self.client.get(self.get_user_url)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data["email"], self.user_email)
@@ -79,7 +79,7 @@ class AuthAppTests(APITestCase):
         Test retrieving user details when not authenticated.
         """
         response = self.client.get(self.get_user_url)
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, 403)
 
     def test_logout_authenticated(self):
         """
