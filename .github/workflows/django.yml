@@ -1,5 +1,21 @@
 name: Django CI
 
+env:
+  
+SECRET_KEY=""
+DB_ENGINE="django.db.backends.postgresql"
+DB_HOST="db.dfbvdfbvdf.supabase.co"
+DB_PORT="5432"
+DB_NAME="postgres"
+DB_USER="postgres"
+DB_PASSWORD="dfgfgfdgfdgfdg"
+DB_OPTIONS="require"
+
+USE_LOCAL_LLM=false
+LOCAL_LLM_URL=http://localhost:11434/api/generate
+LLM_MODEL=codellama
+USE_SQLITE=true
+
 on:
   push:
     branches: [ "main" ]
@@ -25,6 +41,9 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
+    - name: Run Migrations
+      run: |
+       python manage.py migrate
     - name: Run Tests
       run: |
         python manage.py test
