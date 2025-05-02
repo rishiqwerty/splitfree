@@ -15,15 +15,15 @@ import os
 
 firebase_cred = os.getenv("FIREBASE_CREDENTIALS")
 firebase_b64 = os.getenv("FIREBASE_CREDENTIALS_B64")
-
-if firebase_b64:
-    decoded = base64.b64decode(firebase_b64)
-    FIREBASE_CREDENTIALS = json.loads(decoded)
-else:
-    FIREBASE_CREDENTIALS = firebase_cred
-
-cred = credentials.Certificate(FIREBASE_CREDENTIALS)
-initialize_app(cred)
+if firebase_b64 or firebase_cred:
+    if firebase_b64:
+        decoded = base64.b64decode(firebase_b64)
+        FIREBASE_CREDENTIALS = json.loads(decoded)
+    else:
+        FIREBASE_CREDENTIALS = firebase_cred
+    
+    cred = credentials.Certificate(FIREBASE_CREDENTIALS)
+    initialize_app(cred)
 
 User = get_user_model()
 
