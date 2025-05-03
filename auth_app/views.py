@@ -21,7 +21,7 @@ if firebase_b64 or firebase_cred:
         FIREBASE_CREDENTIALS = json.loads(decoded)
     else:
         FIREBASE_CREDENTIALS = firebase_cred
-    
+
     cred = credentials.Certificate(FIREBASE_CREDENTIALS)
     initialize_app(cred)
 

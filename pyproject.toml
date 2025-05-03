@@ -43,4 +43,4 @@ build-backend = "poetry.core.masonry.api"
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "splitfree_backend.settings"
 # -- recommended but optional:
-python_files = ["test_*.py", "*_test.py", "splitfree_backend/python/*.py"]
+python_files = ["test_*.py", "*_test.py", "splitfree_backend/python/*.py", "tests.py"]
