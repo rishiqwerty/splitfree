@@ -155,16 +155,27 @@ class UserExpenseListView(APIView):
             if self.request.user not in group.members.all():
                 raise PermissionDenied("You are not a member of this group.")
 
-            expense = Expense.objects.filter(group_id=group_id)
+            expense = Expense.objects.filter(group_id=group_id).order_by(
+                "-expense_date"
+            )
         if start_date:
             expense = Expense.objects.filter(
                 created_at__date__gte=start_date,
                 created_at__date__lte=end_date,
                 split_between__id__contains=user_id,
-            )
+            ).order_by("-expense_date")
 
         else:
-            expense = Expense.objects.filter(split_between__id__contains=user_id)
+            expense = Expense.objects.filter(
+                split_between__id__contains=user_id
+            ).order_by("-expense_date")
 
-        serialized_data = UserExpenseSerializer(expense).data
+        serialized_data = UserExpenseSerializer(
+            expense,
+            context={
+                "user_id": user_id,
+                "start_date": start_date,
+                "end_date": end_date,
+            },
+        ).data
         return Response(serialized_data, status=200)

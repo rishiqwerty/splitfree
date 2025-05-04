@@ -194,5 +194,15 @@ class UserExpenseSerializer(serializers.Serializer):
         """
         Get the total spent by the user.
         """
-        total_spent = obj.aggregate(total=models.Sum("amount"))["total"]
+        end_date = self.context.get("end_date")
+        start_date = (
+            self.context.get("start_date")
+            if self.context.get("start_date")
+            else end_date.replace(day=1).date()
+        )
+        user_id = self.context.get("user_id")
+        splits = Split.objects.filter(
+            user=user_id, expense__expense_date__range=(start_date, end_date.date())
+        )
+        total_spent = splits.aggregate(total=models.Sum("amount"))["total"]
         return total_spent or 0
