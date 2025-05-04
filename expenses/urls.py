@@ -23,4 +23,9 @@ urlpatterns = [
         views.ExpenseUpdateView.as_view(),
         name="expense_update",
     ),
+    path(
+        "person-expenses/",
+        views.UserExpenseListView.as_view(),
+        name="user_expense_list",
+    ),
 ]

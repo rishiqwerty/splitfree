@@ -1,3 +1,4 @@
+from datetime import datetime
 from django.shortcuts import get_object_or_404
 from rest_framework import generics
 from django.core.exceptions import PermissionDenied
@@ -8,7 +9,13 @@ from auth_app.utils import log_activity
 
 from .models import Expense
 from groups.models import ExpenseGroup
-from .serializers import ExpenseSerializer, ExpenseSummarySerializer
+from .serializers import (
+    ExpenseSerializer,
+    ExpenseSummarySerializer,
+    UserExpenseSerializer,
+)
+
+from django.utils.dateparse import parse_date
 
 
 class ExpenseCreateView(generics.CreateAPIView):
@@ -126,3 +133,38 @@ class ExpenseSummaryView(APIView):
         # Serialize the expense summary
         serializer = ExpenseSummarySerializer(group, context={"request": request})
         return Response(serializer.data)
+
+
+class UserExpenseListView(APIView):
+    """
+    API view to get the list of expenses for a user in a group.
+    """
+
+    def get(self, request, *args, **kwargs):
+        group_id = self.kwargs.get("group_id")
+        user_id = self.request.user.id
+        start_date_str = self.kwargs.get("start_date")
+        end_date_str = self.kwargs.get("end_date")
+
+        # Convert the date strings to date objects
+        start_date = parse_date(start_date_str) if start_date_str else None
+        end_date = parse_date(end_date_str) if end_date_str else datetime.now()
+
+        if group_id:
+            group = ExpenseGroup.objects.get(id=group_id)
+            if self.request.user not in group.members.all():
+                raise PermissionDenied("You are not a member of this group.")
+
+            expense = Expense.objects.filter(group_id=group_id)
+        if start_date:
+            expense = Expense.objects.filter(
+                created_at__date__gte=start_date,
+                created_at__date__lte=end_date,
+                split_between__id__contains=user_id,
+            )
+
+        else:
+            expense = Expense.objects.filter(split_between__id__contains=user_id)
+
+        serialized_data = UserExpenseSerializer(expense).data
+        return Response(serialized_data, status=200)
