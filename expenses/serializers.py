@@ -153,22 +153,22 @@ class ExpenseSummarySerializer(serializers.Serializer):
         )
 
         if simplify_enable == "true" and not instance.simplify_debt:
-            self.group.simplify_debt = True
-            self.group.save()
+            instance.simplify_debt = True
+            instance.save()
             log_activity(
-                user=self.request.user,
+                user=request.user,
                 name="Group Simplified",
-                description=f"Group '{self.group.name}' debts simplified.",
-                related_object=self.group,
+                description=f"Group '{instance.name}' debts simplified.",
+                related_object=instance,
             )
         elif simplify_enable == "false" and instance.simplify_debt:
-            self.group.simplify_debt = False
-            self.group.save()
+            instance.simplify_debt = False
+            instance.save()
             log_activity(
-                user=self.request.user,
+                user=request.user,
                 name="Group Simplified",
-                description=f"Group '{self.group.name}' debts unsimplified.",
-                related_object=self.group,
+                description=f"Group '{instance.name}' debts unsimplified.",
+                related_object=instance,
             )
 
         summary_data = ExpenseSummary(instance).get_summary()

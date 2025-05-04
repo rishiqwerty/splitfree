@@ -1,6 +1,6 @@
 from django.contrib.auth import get_user_model
 from rest_framework.test import APITestCase
-from expenses.serializers import ExpenseSummarySerializer
+from expenses.summray_calculate import ExpenseSummary
 
 User = get_user_model()
 
@@ -28,7 +28,7 @@ class SimplifyDebtsTests(APITestCase):
         """
         Test the simplify_debts method.
         """
-        serializer = ExpenseSummarySerializer()
+        serializer = ExpenseSummary()
         # Example balances
         # user1 owes 50 to user2
         # user2 owes 30 to user3
@@ -60,7 +60,7 @@ class SimplifyDebtsTests(APITestCase):
         Test simplify_debts with no balances (empty dictionary).
         """
         balances = {}
-        serializer = ExpenseSummarySerializer()
+        serializer = ExpenseSummary()
         simplified_transactions = serializer.simplify_debts(balances)
 
         # Assert no transactions are generated
@@ -74,7 +74,7 @@ class SimplifyDebtsTests(APITestCase):
             self.user1.id: -50,  # Debtor
             self.user2.id: 50,  # Creditor
         }
-        serializer = ExpenseSummarySerializer()
+        serializer = ExpenseSummary()
         simplified_transactions = serializer.simplify_debts(balances)
 
         # Assert one transaction is generated
@@ -93,7 +93,7 @@ class SimplifyDebtsTests(APITestCase):
             self.user2.id: 20,  # Creditor
             self.user3.id: 50,  # Creditor
         }
-        serializer = ExpenseSummarySerializer()
+        serializer = ExpenseSummary()
         simplified_transactions = serializer.simplify_debts(balances)
 
         # Assert two transactions are generated
@@ -118,7 +118,7 @@ class SimplifyDebtsTests(APITestCase):
             self.user2.id: 0,
             self.user3.id: 0,
         }
-        serializer = ExpenseSummarySerializer()
+        serializer = ExpenseSummary()
         simplified_transactions = serializer.simplify_debts(balances)
 
         # Assert no transactions are generated
@@ -134,7 +134,7 @@ class SimplifyDebtsTests(APITestCase):
             self.user3.id: 100,  # Creditor
             self.user4.id: 50,  # Creditor
         }
-        serializer = ExpenseSummarySerializer()
+        serializer = ExpenseSummary()
         simplified_transactions = serializer.simplify_debts(balances)
 
         self.assertEqual(len(simplified_transactions), 2)
