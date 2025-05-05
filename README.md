@@ -34,9 +34,11 @@ Note: Both backend and frontend is deployed in free tier service, so it may take
 - [Poetry](https://python-poetry.org/)
 - [direnv](https://direnv.net/)
 - [ollama](https://ollama.com/)(Optional)
+- [docker](https://www.docker.com/)(Optional)
 
 ## Installation
 
+### direnv way
 1. Clone the repository:
     ```bash
     git clone https://github.com/rishiqwerty/splitfree_backend.git
@@ -69,11 +71,25 @@ Note: Both backend and frontend is deployed in free tier service, so it may take
     ollama pull codellama
    ```
 Note: To enable Google login, you’ll need to configure it in the Firebase Console. Follow the official guide here:
-👉 Firebase Google Sign-In Setup
+👉 [Firebase Google Sign-In Setup](https://firebase.google.com/docs/auth/web/google-signin)
 
+## Docker way
+1. Clone the repository:
+    ```bash
+    git clone https://github.com/rishiqwerty/splitfree_backend.git
+    cd splitfree_backend
+    ```
+2. Go to base directory of repository and run docker build command to build an image
+   ```
+    docker build -t splitfree_bakcend .
+   ```
+3. Then we can run docker compose to bring up the server
+   ```
+    docker compose up --build
+   ```
 ## Environment Variables
 
-Create a `.envrc.local`(if using direnv) file in the project root and add the following:
+Create a `.envrc.local`(if using ***direnv***) file in the project root and add the following:
 
 ```
     export USE_SQLITE=true                          # Use SQLite for local development
@@ -87,6 +103,17 @@ Create a `.envrc.local`(if using direnv) file in the project root and add the fo
     export USE_LOCAL_LLM=false                      # Set to true to use a local LLM instance
     export LOCAL_LLM_URL=http://localhost:11434/api/generate  # URL for local LLM endpoint
     export LLM_MODEL=codellama                      # Name of the local model to use
+```
+For ***docker*** we need to create `.env` file like this:
+```
+USE_LOCAL_LLM=true<If you have local llm setup>
+LOCAL_LLM_URL=<url to access local llm>
+LLM_MODEL=codellama<local llm model>
+USE_SQLITE=true<If want to use sql lite for database, false if you want to use other database>
+GEMINI_API_KEY=<API Key for ai overview and icons>
+DATABASE_URL=<postgres remote serverurl>
+FIREBASE_CREDENTIALS=<json file location if you can put the code in below variable>
+FIREBASE_CREDENTIALS_BASE64=xdjscdsvnidnvsdvndv
 ```
 Note:
 - Make sure to run direnv allow, if there is any changes in this file
