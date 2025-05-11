@@ -3,20 +3,22 @@ version: 0.2
 phases:
   install:
     runtime-versions:
-      docker: 18
-  pre_build:
+      python: 3.13
     commands:
-      - echo Logging in to Amazon ECR...
-      - $(aws ecr get-login-password --region eu-north-1 | docker login --username AWS --password-stdin 576394207135.dkr.ecr.eu-north-1.amazonaws.com/splitfree)
+      - pip install --upgrade pip
+      - pip install -r requirements.txt
+      - pip install zappa
   build:
     commands:
-      - echo Building the Docker image...
-      - docker build -t splitfree .
-      - docker tag splitfree:latest 576394207135.dkr.ecr.eu-north-1.amazonaws.com/splitfree:latest
-  post_build:
-    commands:
-      - echo Pushing the Docker image to Amazon ECR...
-      - docker push 576394207135.dkr.ecr.eu-north-1.amazonaws.com/splitfree:latest
+      - echo Checking for existing Zappa deployment...
+      - |
+        if zappa status production | grep -q "API Gateway URL"; then
+          echo "Deployment exists. Running zappa update..."
+          zappa update production
+        else
+          echo "No existing deployment. Running zappa deploy..."
+          zappa deploy production --yes
+        fi
 artifacts:
   files:
     - '**/*'

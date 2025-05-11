@@ -24,7 +24,8 @@ dependencies = [
     "pre-commit (>=4.2.0,<5.0.0)",
     "pytest (>=8.3.5,<9.0.0)",
     "pytest-django (>=4.11.1,<5.0.0)",
-    "drf-spectacular[sidecar] (>=0.28.0,<0.29.0)"
+    "drf-spectacular[sidecar] (>=0.28.0,<0.29.0)",
+    "zappa (>=0.59.0,<0.60.0)"
 ]
 
 [tool.poetry]
