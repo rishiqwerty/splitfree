@@ -1,25 +1,26 @@
-version: 0.2
+# Using github actions to deploy a zappa app
+# version: 0.2
 
-phases:
-  install:
-    runtime-versions:
-      python: 3.13
-    commands:
-      - pip install --upgrade pip
-      - pip install -r requirements.txt
-      - pip install zappa
-  build:
-    commands:
-      - echo Checking for existing Zappa deployment...
-      - |
-        if zappa status production | grep -q "API Gateway URL"; then
-          echo "Deployment exists. Running zappa update..."
-          zappa update production
-        else
-          echo "No existing deployment. Running zappa deploy..."
-          zappa deploy production --yes
-        fi
-artifacts:
-  files:
-    - '**/*'
-  discard-paths: yes
+# phases:
+#   install:
+#     runtime-versions:
+#       python: 3.13
+#     commands:
+#       - pip install --upgrade pip
+#       - pip install -r requirements.txt
+#       - pip install zappa
+#   build:
+#     commands:
+#       - echo Checking for existing Zappa deployment...
+#       - |
+#         if zappa status production | grep -q "API Gateway URL"; then
+#           echo "Deployment exists. Running zappa update..."
+#           zappa update production
+#         else
+#           echo "No existing deployment. Running zappa deploy..."
+#           zappa deploy production --yes
+#         fi
+# artifacts:
+#   files:
+#     - '**/*'
+#   discard-paths: yes
