@@ -12,6 +12,7 @@
         "DJANGO_SETTINGS_MODULE": "splitfree_backend.settings",
         "USE_SQLITE": "false"
       },
-      "manage_roles": false
+      "manage_roles": false,
+      "slim_handler": true
     }
   }
