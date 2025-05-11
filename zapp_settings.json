@@ -1,0 +1,17 @@
+{
+    "production": {
+      "app_function": "splitfree_backend.wsgi.application",
+      "aws_region": "eu-north-1",
+      "profile_name": "default",
+      "project_name": "splitfree-backend",
+      "runtime": "python3.13",
+      "s3_bucket": "splitfree-zappa-deployments",
+      "timeout_seconds": 30,
+      "memory_size": 512,
+      "environment_variables": {
+        "DJANGO_SETTINGS_MODULE": "splitfree_backend.settings",
+        "USE_SQLITE": "false"
+      },
+      "manage_roles": false
+    }
+  }
