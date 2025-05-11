@@ -16,7 +16,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.13'  # This should match your Zappa runtime
+          python-version: '3.12'  # This should match your Zappa runtime
 
       - name: Install dependencies
         run: |
