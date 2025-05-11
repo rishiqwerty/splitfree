@@ -113,7 +113,6 @@ s3transfer==0.12.0
 shellingham==1.5.4
 six==1.17.0
 sniffio==1.3.1
--e git+https://github.com/rishiqwerty/splitfree.git@0a57e931d8f10c53c8b45f0929fe8f86f804d83b#egg=splitfree_backend
 sqlparse==0.5.3
 text-unidecode==1.3
 toml==0.10.2
