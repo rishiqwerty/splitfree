@@ -15,4 +15,4 @@ COPY . .
 EXPOSE 8080
 
 # Command to run the application
-CMD ["gunicorn", "splitfree_backend.wsgi", "--bind" ,"0.0.0.0:8080"]
+CMD ["sh", "-c", "python manage.py migrate && python manage.py check && gunicorn splitfree_backend.wsgi --bind 0.0.0.0:8080"]
