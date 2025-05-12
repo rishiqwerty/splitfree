@@ -13,6 +13,23 @@
         "USE_SQLITE": "false"
       },
       "manage_roles": false,
-      "slim_handler": true
+      "slim_handler": true,
+      "exclude": [
+        "*.gz",
+        "*.rar",
+        "*.zip",
+        "*.tar",
+        "tests",
+        "__pycache__",
+        "node_modules",
+        "static",
+        "media",
+        ".git",
+        ".vscode",
+        ".direnv",
+        ".env",
+        ".envrc"
+      ]
+
     }
   }
