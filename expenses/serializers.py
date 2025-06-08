@@ -162,14 +162,16 @@ class ExpenseSummarySerializer(serializers.Serializer):
                 related_object=instance,
             )
         elif simplify_enable == "false" and instance.simplify_debt:
-            instance.simplify_debt = False
-            instance.save()
-            log_activity(
-                user=request.user,
-                name="Group Simplified",
-                description=f"Group '{instance.name}' debts unsimplified.",
-                related_object=instance,
-            )
+            # Disabling reverting the non simplification, because of issue #4
+            # instance.simplify_debt = False
+            # instance.save()
+            # log_activity(
+            #     user=request.user,
+            #     name="Group Simplified",
+            #     description=f"Group '{instance.name}' debts unsimplified.",
+            #     related_object=instance,
+            # )
+            pass
 
         summary_data = ExpenseSummary(instance).get_summary()
         return summary_data
