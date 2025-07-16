@@ -28,9 +28,10 @@ class ExpenseSummary:
         users = group.members.all()  # Get all members of the group
         for user in users:
             # Calculate total paid by the user
-            expenses = expenses.annotate(split_count=Count("splits")).exclude(
-                split_count=1
-            )
+            expenses = expenses.annotate(split_count=Count("splits"))
+            # .exclude(
+            #     split_count=1
+            # )
             paid = (
                 expenses.filter(paid_by=user).aggregate(total=models.Sum("amount"))[
                     "total"
@@ -45,9 +46,10 @@ class ExpenseSummary:
             )
             # Calculate total owed by the user
             owed = (
-                Split.objects.filter(expense__in=expenses, user=user)
-                .annotate(split_count=Count("expense__splits"))
-                .exclude(split_count=1)
+                Split.objects.filter(expense__in=expenses, user=user).annotate(
+                    split_count=Count("expense__splits")
+                )
+                # .exclude(split_count=1)
                 .aggregate(total=models.Sum("amount"))["total"]
                 or 0
             )
@@ -223,5 +225,5 @@ class ExpenseSummary:
                 creditors.insert(0, (creditor_id, credit_remaining))
             if debt_remaining > 0:
                 debtors.insert(0, (debtor_id, debt_remaining))
-
+        print("sdaas", transactions)
         return transactions
