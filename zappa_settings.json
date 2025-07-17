@@ -8,6 +8,7 @@
       "s3_bucket": "splitfree-zappa-deployments",
       "timeout_seconds": 30,
       "memory_size": 512,
+      "keep_warm": true,
       "environment_variables": {
         "DJANGO_SETTINGS_MODULE": "splitfree_backend.settings",
         "USE_SQLITE": "false"
@@ -26,7 +27,12 @@
         ".envrc",
         "venv",
         ".venv"
+      ],
+      "events": [
+        {
+          "function": "utils.keep_db_alive.keep_db_alive",
+          "expression": "rate(5 minutes)"
+        }
       ]
-
     }
   }
