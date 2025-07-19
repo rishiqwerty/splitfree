@@ -34,7 +34,7 @@ class ExpenseCreateView(generics.CreateAPIView):
         group = ExpenseGroup.objects.get(id=group_id)
 
         # Check if the user is part of the group
-        if self.request.user not in group.members.all():
+        if not group.members.filter(id=self.request.user.id).exists():
             raise PermissionDenied("You are not a member of this group.")
         # Save the expense if the user is a part of the group
         serializer.save(paid_by=self.request.user)
@@ -59,7 +59,7 @@ class ExpenseDeleteView(generics.DestroyAPIView):
         expense = get_object_or_404(Expense, id=expense_id)
 
         # Check if the user is part of the group associated with the expense
-        if request.user not in expense.group.members.all():
+        if not expense.group.members.filter(id=self.request.user.id).exists():
             raise PermissionDenied(
                 "You are not a member of the group associated with this expense."
             )
@@ -90,7 +90,7 @@ class ExpenseUpdateView(generics.UpdateAPIView):
         expense = get_object_or_404(Expense, id=expense_id)
 
         # Check if the user is part of the group associated with the expense
-        if request.user not in expense.group.members.all():
+        if not expense.group.members.filter(id=request.user.id).exists():
             raise PermissionDenied(
                 "You are not a member of the group associated with this expense."
             )
@@ -117,7 +117,7 @@ class ExpenseListView(generics.ListAPIView):
     def get_queryset(self):
         group_id = self.kwargs["group_id"]
         group = ExpenseGroup.objects.get(id=group_id)
-        if self.request.user not in group.members.all():
+        if not group.members.filter(id=self.request.user.id).exists():
             raise PermissionDenied("You are not a member of this group.")
         return Expense.objects.filter(group_id=group_id)
 
@@ -132,7 +132,7 @@ class ExpenseSummaryView(APIView):
         group = get_object_or_404(ExpenseGroup, id=group_id)
 
         # Ensure the user is a member of the group
-        if request.user not in group.members.all():
+        if not group.members.filter(id=self.request.user.id).exists():
             return Response(
                 {"error": "You are not a member of this group."}, status=403
             )
@@ -162,7 +162,7 @@ class UserExpenseListView(generics.ListAPIView):
 
         if group_id:
             expense_group = get_object_or_404(ExpenseGroup, id=group_id)
-            if self.request.user not in expense_group.members.all():
+            if not expense_group.members.filter(id=self.request.user.id).exists():
                 raise PermissionDenied("You are not a member of this group.")
             expenses = expenses.filter(group_id=group_id)
         if start_date:

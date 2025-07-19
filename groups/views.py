@@ -78,10 +78,10 @@ class GroupMembersView(generics.ListAPIView):
                 raise PermissionDenied("Group not found.")
 
             # Check if the user is a member of the group
-            if self.request.user not in group.members.all():
+            if not group.members.filter(id=self.request.user.id).exists():
                 raise PermissionDenied("You are not a member of this group.")
 
-            return ExpenseGroup.objects.filter(id=group.id)
+            return [group]
         return ExpenseGroup.objects.filter(members=self.request.user)
 
 
@@ -173,7 +173,7 @@ class GroupOverview(APIView):
 
     def get(self, request, group_id):
         group = get_object_or_404(ExpenseGroup, id=group_id)
-        if request.user not in group.members.all():
+        if not group.members.filter(id=self.request.user.id).exists():
             return Response(
                 {"error": "You are not a member of this group."}, status=403
             )
