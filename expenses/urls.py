@@ -28,4 +28,9 @@ urlpatterns = [
         views.UserExpenseListView.as_view(),
         name="user_expense_list",
     ),
+    path(
+        "person-monthly-expenses/",
+        views.UserTotalSpentView.as_view(),
+        name="user_monthly_expense_list",
+    ),
 ]

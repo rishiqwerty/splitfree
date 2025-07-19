@@ -1,6 +1,7 @@
 from datetime import datetime
 from django.shortcuts import get_object_or_404
 from rest_framework import generics
+from rest_framework.pagination import CursorPagination
 from django.core.exceptions import PermissionDenied
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -16,6 +17,11 @@ from .serializers import (
 )
 
 from django.utils.dateparse import parse_date
+
+
+class ExpenseCursorPagination(CursorPagination):
+    page_size = 10
+    ordering = "-expense_date"
 
 
 class ExpenseCreateView(generics.CreateAPIView):
@@ -135,47 +141,71 @@ class ExpenseSummaryView(APIView):
         return Response(serializer.data)
 
 
-class UserExpenseListView(APIView):
+class UserExpenseListView(generics.ListAPIView):
     """
     API view to get the list of expenses for a user in a group.
     """
 
-    def get(self, request, *args, **kwargs):
-        group_id = self.kwargs.get("group_id")
-        user_id = self.request.user.id
-        start_date_str = self.kwargs.get("start_date")
-        end_date_str = self.kwargs.get("end_date")
+    serializer_class = ExpenseSerializer
+    pagination_class = ExpenseCursorPagination
 
-        # Convert the date strings to date objects
+    def get_queryset(self):
+        user_id = self.request.user.id
+        group_id = self.kwargs.get("group_id")
+        start_date_str = self.request.query_params.get("start_date")
+        end_date_str = self.request.query_params.get("end_date")
+
         start_date = parse_date(start_date_str) if start_date_str else None
-        end_date = parse_date(end_date_str) if end_date_str else datetime.now()
+        end_date = parse_date(end_date_str) if end_date_str else datetime.now().date()
+
+        expenses = Expense.objects.filter(split_between__id=user_id)
 
         if group_id:
-            group = ExpenseGroup.objects.get(id=group_id)
-            if self.request.user not in group.members.all():
+            expense_group = get_object_or_404(ExpenseGroup, id=group_id)
+            if self.request.user not in expense_group.members.all():
                 raise PermissionDenied("You are not a member of this group.")
-
-            expense = Expense.objects.filter(group_id=group_id).order_by(
-                "-expense_date"
-            )
+            expenses = expenses.filter(group_id=group_id)
         if start_date:
-            expense = Expense.objects.filter(
+            expenses = expenses.filter(
                 created_at__date__gte=start_date,
                 created_at__date__lte=end_date,
                 split_between__id__contains=user_id,
             ).order_by("-expense_date")
 
         else:
-            expense = Expense.objects.filter(
-                split_between__id__contains=user_id
-            ).order_by("-expense_date")
+            expenses = expenses.filter(split_between__id__contains=user_id).order_by(
+                "-expense_date"
+            )
+        return expenses
 
-        serialized_data = UserExpenseSerializer(
-            expense,
+
+class UserTotalSpentView(APIView):
+    def get(self, request):
+        user = request.user
+        start_date = request.query_params.get("start_date")
+        end_date = request.query_params.get("end_date")
+        group_id = request.query_params.get("group_id")
+
+        start_date = parse_date(start_date) if start_date else None
+        end_date = parse_date(end_date) if end_date else datetime.now().date()
+
+        # Optional group filter
+        expenses = Expense.objects.filter(split_between__id=user.id)
+        if group_id:
+            expenses = expenses.filter(group_id=group_id)
+
+        if start_date:
+            expenses = expenses.filter(expense_date__range=(start_date, end_date))
+
+        total_current_month_expenses = UserExpenseSerializer(
+            expenses,
             context={
-                "user_id": user_id,
+                "user_id": user.id,
                 "start_date": start_date,
                 "end_date": end_date,
             },
         ).data
-        return Response(serialized_data, status=200)
+
+        return Response(
+            {"total_spent": total_current_month_expenses.get("total_spent", 0)}
+        )

@@ -182,15 +182,7 @@ class UserExpenseSerializer(serializers.Serializer):
     Serializer for user expense details.
     """
 
-    expenses = serializers.SerializerMethodField()
     total_spent = serializers.SerializerMethodField()
-
-    def get_expenses(self, obj):
-        """
-        Get the expenses for the user.
-        """
-        serializer = ExpenseSerializer(obj, many=True)
-        return serializer.data
 
     def get_total_spent(self, obj):
         """
@@ -200,11 +192,11 @@ class UserExpenseSerializer(serializers.Serializer):
         start_date = (
             self.context.get("start_date")
             if self.context.get("start_date")
-            else end_date.replace(day=1).date()
+            else end_date.replace(day=1)
         )
         user_id = self.context.get("user_id")
         splits = Split.objects.filter(
-            user=user_id, expense__expense_date__range=(start_date, end_date.date())
+            user=user_id, expense__expense_date__range=(start_date, end_date)
         )
         total_spent = splits.aggregate(total=models.Sum("amount"))["total"]
         return total_spent or 0
