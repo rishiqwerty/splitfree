@@ -46,9 +46,9 @@ class GroupAPITests(APITestCase):
         """
         response = self.client.get(self.group_members_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
+        self.assertEqual(len(response.data["results"]), 1)
         self.assertEqual(
-            response.data[0]["members"][0]["username"], self.user1.username
+            response.data["results"][0]["members"][0]["username"], self.user1.username
         )
 
     def test_list_group_members_not_in_group(self):
