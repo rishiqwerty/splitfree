@@ -1,11 +1,13 @@
 from django.contrib.auth import get_user_model
 from django.urls import reverse
+from django.db.models.signals import post_save
 from unittest.mock import patch
 from rest_framework.test import APITestCase, APIClient
 from rest_framework.authtoken.models import Token
 from rest_framework import status
 from groups.models import ExpenseGroup
 from expenses.models import Expense
+from expenses.signals import update_group_overview_cache
 
 User = get_user_model()
 
@@ -16,6 +18,7 @@ class ExpenseViewTests(APITestCase):
         Set up test data and API client.
         """
         self.client = APIClient()
+        post_save.disconnect(receiver=update_group_overview_cache, sender=Expense)
 
         # Create users
         self.user1 = User.objects.create_user(
@@ -48,10 +51,15 @@ class ExpenseViewTests(APITestCase):
         self.list_expenses_url = reverse("list_expenses", args=[self.group.id])
         self.summary_url = reverse("expense_summary", args=[self.group.id])
 
-    def test_create_expense_success(self):
+    def tearDown(self):
+        post_save.connect(receiver=update_group_overview_cache, sender=Expense)
+
+    @patch("expenses.serializers.get_expense_icon")
+    def test_create_expense_success(self, mock_get_expense_icon):
         """
         Test creating an expense successfully.
         """
+        mock_get_expense_icon.return_value = "💸"
         data = {
             "title": "New Expense",
             "amount": 200,
@@ -138,8 +146,8 @@ class ExpenseViewTests(APITestCase):
         """
         response = self.client.get(self.list_expenses_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
-        self.assertEqual(response.data[0]["title"], "Test Expense")
+        self.assertEqual(len(response.data["results"]), 1)
+        self.assertEqual(response.data["results"][0]["title"], "Test Expense")
 
     def test_list_expenses_not_in_group(self):
         """

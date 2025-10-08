@@ -19,11 +19,14 @@ def set_default_category(sender, instance, **kwargs):
 
 @receiver(post_save, sender=Expense)
 def update_group_overview_cache(sender, instance, created, **kwargs):
-    if created and instance.group:
-        expense = ExpenseSummary(instance.group).get_summary()
-        ai_overview = generate_content(
-            f"""Generate a one liner random summary for current
-                                        month  using following json response also add one
-                                       random money savings tip:  json:{expense.data} make sure curreny is rupees"""
-        ).replace("\n", "")
-        cache.set(f"ai_overview_{instance.group.id}", ai_overview)
+    try:
+        if created and instance.group:
+            expense = ExpenseSummary(instance.group).get_summary()
+            ai_overview = generate_content(
+                f"""Generate a one liner random summary for current
+                                            month  using following json response also add one
+                                        random money savings tip:  json:{expense} make sure curreny is rupees"""
+            ).replace("\n", "")
+            cache.set(f"ai_overview_{instance.group.id}", ai_overview)
+    except Exception as e:
+        print(f"Error updating group overview cache: {e}")
