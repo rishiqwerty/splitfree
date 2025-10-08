@@ -9,6 +9,7 @@
       "timeout_seconds": 30,
       "memory_size": 512,
       "keep_warm": true,
+      "django_settings": "splitfree_backend.settings",
       "environment_variables": {
         "DJANGO_SETTINGS_MODULE": "splitfree_backend.settings",
         "USE_SQLITE": "false"

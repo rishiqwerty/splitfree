@@ -29,7 +29,7 @@ def generate_content(requested_content):
             return response.json().get("response", "")
         else:
             response = client.models.generate_content(
-                model="gemini-1.5-flash-8b",
+                model="gemini-2.5-flash-lite",
                 contents=f"{requested_content}",
                 config=types.GenerateContentConfig(
                     max_output_tokens=500,
