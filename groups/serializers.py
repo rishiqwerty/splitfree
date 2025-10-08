@@ -1,4 +1,5 @@
 from django.shortcuts import get_object_or_404
+from django.core.cache import cache
 from rest_framework import serializers
 from django.contrib.contenttypes.models import ContentType
 
@@ -153,9 +154,13 @@ class GroupOverviewSerializer(serializers.Serializer):
         expense = ExpenseSummarySerializer(
             obj, context={"request": self.context["request"]}
         )
+        ai_overview_cache = cache.get(f"ai_overview_{obj.id}")
+        if ai_overview_cache:
+            return ai_overview_cache
         ai_overview = generate_content(
             f"""Generate a one liner random summary for current
                                         month  using following json response also add one
                                        random money savings tip:  json:{expense.data} make sure curreny is rupees"""
         ).replace("\n", "")
+        cache.set(f"ai_overview_{obj.id}", ai_overview)
         return ai_overview
